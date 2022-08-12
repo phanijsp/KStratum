@@ -78,7 +78,7 @@ client.on('ready', () => {
           if(npss.length>n) npss.shift()
             npss.push(interaction.params[0].split('.')[0])
           poolStats.updateMiner(interaction)
-          poolStats.updateBalances(npss.slice(), blockReward / BigInt(1e8))
+          poolStats.updateBalances(npss.slice(), Number(blockReward/BigInt(1e8)))
         }).catch(async (err) => {
           if (err.message.includes('ErrInvalidPoW')) {
             // await worker.sendInteraction(new interactions.ErrorAnswer(interaction.id, interactions.errors['LOW_DIFFICULTY_SHARE']))

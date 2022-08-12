@@ -24,6 +24,7 @@ module.exports = class PoolStats {
             var query = { _id: minerID }
             const options = { upsert: true };
             db.db().collection('Miners').updateOne(query, obj, options)
+            console.log("Accepted share from "+minerID+" "+workerID)
         } catch (error) {
             console.log(error)
         }
