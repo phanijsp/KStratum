@@ -7,7 +7,7 @@ module.exports = class PoolStats {
             var minerID = submitResponse.params[0].split('.')[0]
             var workerID = submitResponse.params[0].split('.')[1]
             var date = new Date()
-            date.getUTC
+            date.setMinutes(this.closestNumber(date.getMinutes(), 10))
             date.setSeconds(0)
             date.setMilliseconds(0)
             var dateISO = date.toISOString().replace('.000Z','')
@@ -24,7 +24,7 @@ module.exports = class PoolStats {
             var query = { _id: minerID }
             const options = { upsert: true };
             db.db().collection('Miners').updateOne(query, obj, options)
-            console.log("Accepted share from "+minerID+" "+workerID)
+            // console.log("Accepted share from "+minerID+" "+workerID)
         } catch (error) {
             console.log(error)
         }
@@ -59,6 +59,29 @@ module.exports = class PoolStats {
             console.log(error)
         }
     }
+
+    closestNumber(n, m)
+{
+ 
+    // find the quotient
+    let q = parseInt(n / m);
+     
+    // 1st possible closest number
+    let n1 = m * q;
+     
+    // 2nd possible closest number
+    let n2 = (n * m) > 0 ?
+        (m * (q + 1)) : (m * (q - 1));
+     
+    // if true, then n1 is the
+    // required closest number
+    if (Math.abs(n - n1) < Math.abs(n - n2))
+        return n1;
+     
+    // else n2 is the required
+    // closest number
+    return n2;
+}
 }
 
 
