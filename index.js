@@ -2,6 +2,7 @@ const Environment = require('./src/environment')
 const Client = require('./src/kaspa/client')
 const Hasher = require('./src/kaspa/hasher')
 const Server = require('./src/stratum/server')
+const PoolStats = require('./src/PoolStats')
 
 const interactions = require('./src/stratum/interactions')
 
@@ -12,6 +13,11 @@ console.info(`Connecting to node \x1b[33m${environment.node}\x1b[0m`)
 
 const client = new Client(environment.node)
 const hasher = new Hasher()
+
+var npss = []
+var n = 20000
+
+const poolStats = new PoolStats()
 
 const workers = new Set()
 
@@ -67,10 +73,19 @@ client.on('ready', () => {
   
           console.info(`Accepted block \x1b[33m${hash.toString('hex')}\x1b[0m, mined \x1b[33m${blockReward / BigInt(1e8)}\x1b[0m KAS!`)
           await worker.sendInteraction(new interactions.Answer(interaction.id, true))
+          if(npss.length>n) npss.shift()
+            npss.push(interaction.params[0].split('.')[0])
+          poolStats.updateMiner(interaction)
+          poolStats.updateBalances(npss.slice(), blockReward / BigInt(1e8))
         }).catch(async (err) => {
           if (err.message.includes('ErrInvalidPoW')) {
-            await worker.sendInteraction(new interactions.ErrorAnswer(interaction.id, interactions.errors['LOW_DIFFICULTY_SHARE']))
-            console.error(`Invalid work submitted for block \x1b[33m${hash.toString('hex')}\x1b[0m`)
+            // await worker.sendInteraction(new interactions.ErrorAnswer(interaction.id, interactions.errors['LOW_DIFFICULTY_SHARE']))
+            await worker.sendInteraction(new interactions.Answer(interaction.id, true))
+            
+            if(npss.length>n) npss.shift()
+              npss.push(interaction.params[0].split('.')[0])
+            poolStats.updateMiner(interaction)
+            // console.info(`Invalid work submitted for block \x1b[33m${hash.toString('hex')}\x1b[0m`)
           } else if (err.message.includes('ErrDuplicateBlock')) {
             await worker.sendInteraction(new interactions.ErrorAnswer(interaction.id, interactions.errors['DUPLICATE_SHARE']))
             console.error(`Block \x1b[33m${hash.toString('hex')}\x1b[0m already submitted`)
@@ -98,7 +113,9 @@ client.on('ready', () => {
 
     server.jobs.set(jobId, blockTemplate.block)
 
-    const difficulty = Number(2n ** 255n / await hasher.calculateTarget(BigInt(blockTemplate.block.header.bits))) / 2 ** 31
+    // const difficulty = Number(2n ** 255n / await hasher.calculateTarget(BigInt(blockTemplate.block.header.bits))) / 2 ** 31
+
+    const difficulty = 1
 
     if (server.historical.difficulty !== difficulty) {
       server.historical.difficulty = difficulty

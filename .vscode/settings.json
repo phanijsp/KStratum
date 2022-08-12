@@ -1,0 +1,9 @@
+{
+    "logViewer.watch": [
+        {
+            "title": "KStratum log",
+            "pattern": "H:\\nodeProjects\\KStratum\\runLog.log"
+        }
+    
+    ]
+}
